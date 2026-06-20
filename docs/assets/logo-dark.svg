@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" fill="none">
+  <rect x="0" y="0" width="800" height="200" fill="#1e1e2e"/>
+  <line x1="0" y1="32" x2="800" y2="32" stroke="#313244" stroke-width="1"/>
+  <text x="20" y="22" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="700" fill="#cba6f7" letter-spacing="2">RFS</text>
+  <text x="60" y="22" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#6c7086" letter-spacing="2">·  COVE  ·  BOOKMARK MANAGER</text>
+  <circle cx="676" cy="18" r="3" fill="#a6e3a1"/>
+  <text x="780" y="22" text-anchor="end" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="400" fill="#585b70" letter-spacing="1">JS · OBSIDIAN</text>
+  <text x="20" y="115" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="800" fill="#cdd6f4" letter-spacing="-4">COVE<tspan fill="#74c7ec">.</tspan></text>
+  <line x1="0" y1="140" x2="800" y2="140" stroke="#313244" stroke-width="1"/>
+  <line x1="200" y1="140" x2="200" y2="200" stroke="#313244" stroke-width="1"/>
+  <line x1="400" y1="140" x2="400" y2="200" stroke="#313244" stroke-width="1"/>
+  <line x1="600" y1="140" x2="600" y2="200" stroke="#313244" stroke-width="1"/>
+
+  <text x="20" y="158" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="600" fill="#6c7086" letter-spacing="1">STORAGE</text>
+  <text x="20" y="175" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#74c7ec" letter-spacing="0">MARKDOWN</text>
+  <text x="20" y="190" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="8" fill="#585b70" letter-spacing="0">YAML FRONTMATTER · NO LOCK-IN</text>
+
+  <text x="220" y="158" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="600" fill="#6c7086" letter-spacing="1">LAYOUTS</text>
+  <text x="220" y="175" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#74c7ec" letter-spacing="0">4 VIEWS</text>
+  <text x="220" y="190" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="8" fill="#585b70" letter-spacing="0">LIST · CARDS · KANBAN · TREE</text>
+
+  <text x="420" y="158" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="600" fill="#6c7086" letter-spacing="1">METADATA</text>
+  <text x="420" y="175" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#74c7ec" letter-spacing="0">AUTO-FETCH</text>
+  <text x="420" y="190" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="8" fill="#585b70" letter-spacing="0">TITLE · ICON · OPENGRAPH</text>
+
+  <text x="620" y="158" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="10" font-weight="600" fill="#6c7086" letter-spacing="1">STACK</text>
+  <text x="620" y="175" font-family="'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="700" fill="#74c7ec" letter-spacing="0">JAVASCRIPT</text>
+  <text x="620" y="190" font-family="'JetBrains Mono', 'Courier New', monospace" font-size="8" fill="#585b70" letter-spacing="0">OBSIDIAN PLUGIN · NO DEPS</text>
+</svg>

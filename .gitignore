@@ -1,0 +1,30 @@
+# Obsidian plugin runtime data (per-vault, not source)
+data.json
+
+# Vault-local Obsidian state
+.obsidian/
+
+# Node (only relevant if a build pipeline is added later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build artifacts
+dist/
+build/
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
