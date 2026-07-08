@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Cove -- Bookmark manager for Obsidian — every bookmark is a markdown file with YAML frontmatter under a folder of your choice.">
-    <meta name="keywords" content="Cove, plugin, Cove, sub vault, productivity, knowledge management, note taking">
-    <title>Cove -- Cove Plugin</title>
+    <meta name="description" content="Cove is a bookmark manager for Obsidian where every bookmark is a Markdown file with YAML frontmatter — no proprietary database, no lock-in.">
+    <meta name="keywords" content="Cove, Obsidian, plugin, bookmark manager, markdown, YAML frontmatter, knowledge management">
+    <title>Cove — Bookmark manager for Obsidian</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="Cove — Bookmark manager for Obsidian">
+    <meta property="og:description" content="Every bookmark is a Markdown file with YAML frontmatter. Four layouts, no lock-in.">
+    <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tokens.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -16,16 +21,13 @@
     <!-- ==================== NAV ==================== -->
     <nav class="nav" id="nav">
         <div class="nav-inner">
-            <a href="#" class="nav-logo">
-                <svg class="nav-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
-                Cove
-            </a>
+            <a href="#" class="nav-logo"><img src="favicon.svg" alt="" width="24" height="24">Cove</a>
             <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="#install">Install</a>
-                <a href="https://github.com/Real-Fruit-Snacks/Cove" class="nav-github" target="_blank" rel="noopener">
-                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                <a href="#features" class="manifest">Features</a>
+                <a href="#how" class="manifest">How it works</a>
+                <a href="#install" class="manifest">Install</a>
+                <a href="https://github.com/Real-Fruit-Snacks/Cove" class="nav-github" target="_blank" rel="noopener" aria-label="GitHub repository">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
                 </a>
             </div>
         </div>
@@ -33,165 +35,130 @@
 
     <!-- ==================== HERO ==================== -->
     <section class="hero">
-        <div class="hero-glow hero-glow--1"></div>
-        <div class="hero-glow hero-glow--2"></div>
         <div class="hero-grid"></div>
-
         <div class="hero-content">
-            <div class="hero-badge">Open Source &middot; MIT License</div>
-            <h1 class="hero-title">
-                Bookmark manager for Obsidian.
-            </h1>
-            <p class="hero-subtitle">
-                Bookmark manager for Obsidian — every bookmark is a markdown file with YAML frontmatter under a folder of your choice.
-            </p>
+            <picture>
+                <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+                <img class="hero-logo" src="assets/logo-light.svg" alt="Cove">
+            </picture>
+            <div class="hero-badge manifest"><span class="dot"></span>Available in Community Plugins</div>
+            <h1 class="hero-title">Every bookmark is a <em>plain Markdown file</em>.</h1>
+            <p class="hero-subtitle">A bookmark manager for Obsidian with four switchable layouts. YAML frontmatter under a folder of your choice — no proprietary database, no lock-in.</p>
             <div class="hero-actions">
-                <a href="https://github.com/Real-Fruit-Snacks/Cove/releases/latest" class="btn btn--primary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <a href="https://github.com/Real-Fruit-Snacks/Cove/releases/latest" class="btn btn--primary" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     Download
                 </a>
                 <a href="https://github.com/Real-Fruit-Snacks/Cove" class="btn btn--ghost" target="_blank" rel="noopener">
                     View on GitHub
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
                 </a>
             </div>
         </div>
 
-        <!-- Floating mock UI cards -->
         <div class="hero-visual">
-            <div class="mock-window">
-                <div class="mock-titlebar">
-                    <span class="mock-dot mock-dot--red"></span>
-                    <span class="mock-dot mock-dot--yellow"></span>
-                    <span class="mock-dot mock-dot--green"></span>
-                    <span class="mock-titlebar-text">Cove</span>
+            <div class="mock">
+                <div class="mock-bar">
+                    <span class="mock-prompt">&#10095;</span>
+                    <span class="manifest">Cove / bookmarks</span>
                 </div>
                 <div class="mock-body">
-                    <div class="mock-sidebar">
-                        <div class="mock-folder mock-folder--active">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                            Bookmarks
-                        </div>
-                        <div class="mock-file mock-file--nested">Inbox</div>
-                        <div class="mock-file mock-file--nested">Reading</div>
-                        <div class="mock-file mock-file--nested">Done</div>
-                        <div class="mock-file mock-file--nested">Archive</div>
-                        <div class="mock-folder mock-folder--hidden">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                            Tags
-                        </div>
+                    <div class="mock-side">
+                        <div class="manifest">Status</div>
+                        <div class="mock-item"><span class="lhs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Inbox</span><span class="count">6</span></div>
+                        <div class="mock-item mock-item--active"><span class="lhs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Reading</span><span class="count">12</span></div>
+                        <div class="mock-item"><span class="lhs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Done</span><span class="count">48</span></div>
+                        <div class="mock-item"><span class="lhs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Archive</span><span class="count">31</span></div>
                     </div>
-                    <div class="mock-editor">
-                        <div class="mock-editor-line mock-editor-line--heading">Bookmarks / Reading</div>
-                        <div class="mock-editor-line" style="display: flex; gap: 1rem; margin-top: 1rem;">
-                            <div style="flex: 1; background: var(--surface-0); border-radius: 8px; padding: 1rem; border: 1px solid var(--surface-1);">
-                                <div style="font-weight: 600; color: var(--text);">How to build a web browser</div>
-                                <div style="color: var(--sub0); font-size: 0.85em; margin-top: 0.5rem;">A deep dive into the architecture of modern web browsers...</div>
-                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                                    <span style="background: var(--surface-1); color: var(--accent); padding: 2px 8px; border-radius: 12px; font-size: 0.75em;">#tech</span>
-                                    <span style="background: var(--surface-1); color: var(--accent); padding: 2px 8px; border-radius: 12px; font-size: 0.75em;">#browser</span>
-                                </div>
-                            </div>
-                            <div style="flex: 1; background: var(--surface-0); border-radius: 8px; padding: 1rem; border: 1px solid var(--surface-1);">
-                                <div style="font-weight: 600; color: var(--text);">Advanced CSS Selectors</div>
-                                <div style="color: var(--sub0); font-size: 0.85em; margin-top: 0.5rem;">Learn how to use :has(), :is(), and :where() to simplify your CSS...</div>
-                                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                                    <span style="background: var(--surface-1); color: var(--accent); padding: 2px 8px; border-radius: 12px; font-size: 0.75em;">#css</span>
-                                </div>
-                            </div>
+                    <div class="mock-main">
+                        <div class="mock-crumb">Bookmarks / <b>Reading</b></div>
+                        <div class="mock-card">
+                            <div class="mock-card-title">How browsers work under the hood</div>
+                            <div class="mock-card-sub">A deep dive into parsing, layout, and the rendering pipeline of modern engines…</div>
+                            <div class="mock-tags"><span class="mock-tag">#tech</span><span class="mock-tag">#browser</span></div>
+                        </div>
+                        <div class="mock-card">
+                            <div class="mock-card-title">Advanced CSS selectors</div>
+                            <div class="mock-card-sub">Using :has(), :is(), and :where() to simplify real-world stylesheets…</div>
+                            <div class="mock-tags"><span class="mock-tag">#css</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="mock-statusbar">
-                    <span class="mock-statusbar-vault">Bookmarks Folder: /Bookmarks</span>
-                </div>
+                <div class="mock-foot"><span class="manifest">Folder <b>/Bookmarks</b> &middot; 97 saved &middot; markdown</span></div>
             </div>
         </div>
     </section>
 
     <!-- ==================== FEATURES ==================== -->
     <section class="features" id="features">
-        <div class="section-inner">
-            <div class="section-header">
-                <p class="section-label">Capabilities</p>
-                <h2 class="section-title">Your bookmarks are just markdown files.</h2>
-                <p class="section-desc">Cove is a bookmark manager that treats every bookmark as a `.md` file with YAML frontmatter — nothing more.</p>
+        <div class="wrap">
+            <div class="section-head">
+                <p class="kicker manifest">Capabilities</p>
+                <h2 class="section-title">Your bookmarks are just Markdown files.</h2>
+                <p class="section-desc">One <code>.md</code> per bookmark, read and written through Obsidian's own file APIs — so nothing ever leaves plain text.</p>
             </div>
-
             <div class="feature-grid">
                 <div class="feature-card" data-reveal>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    </div>
-                    <h3>No Lock-In Storage</h3>
-                    <p>There is no proprietary database, no `.json` cache. One `.md` per bookmark. Your export is the storage.</p>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+                    <h3>No lock-in storage</h3>
+                    <p>No proprietary database and no cache you depend on. Disable Cove and every bookmark is still a plain note in your vault.</p>
                 </div>
-
                 <div class="feature-card" data-reveal>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-                    </div>
-                    <h3>Multiple Views</h3>
-                    <p>Instantly switch between Compact list, Cards, Kanban board, or Tree-with-preview.</p>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+                    <h3>Four switchable layouts</h3>
+                    <p>List, Cards, Board, and Tree-with-preview — all rendering the same underlying files, switchable in a click.</p>
                 </div>
-
                 <div class="feature-card" data-reveal>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </div>
-                    <h3>Auto-Fetched Metadata</h3>
-                    <p>Automatically extracts title, description, `og:image`, favicon, author, and reading time via built-in APIs.</p>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+                    <h3>Automatic metadata</h3>
+                    <p>Title, description, cover image, favicon, author, and reading time are fetched and written into frontmatter as you add a URL.</p>
                 </div>
-
                 <div class="feature-card" data-reveal>
-                    <div class="feature-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                    </div>
-                    <h3>Workflow Status</h3>
-                    <p>Map directly to vault subfolders. Track items through Inbox, Reading, Done, Archive, or Broken.</p>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+                    <h3>Full-text search</h3>
+                    <p>Match across title, description, domain, URL, tags, and each bookmark's notes — with results highlighted in place.</p>
+                </div>
+                <div class="feature-card" data-reveal>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+                    <h3>Real folders &amp; tags</h3>
+                    <p>Folders map to actual vault subfolders with drag-to-move; tags carry autocomplete, filters, and custom icons.</p>
+                </div>
+                <div class="feature-card" data-reveal>
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                    <h3>Link health &amp; import</h3>
+                    <p>Background checks flag broken links, and Netscape HTML import/export moves bookmarks in and out of any browser.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- ==================== HOW IT WORKS ==================== -->
-    <section class="how" id="how-it-works">
-        <div class="section-inner">
-            <div class="section-header">
-                <p class="section-label">Workflow</p>
-                <h2 class="section-title">Install. Configure. Save.</h2>
+    <section class="how" id="how">
+        <div class="wrap">
+            <div class="section-head">
+                <p class="kicker manifest">Workflow</p>
+                <h2 class="section-title">Install, configure, save.</h2>
             </div>
-
-            <div class="steps-timeline">
+            <div class="steps">
                 <div class="step" data-reveal>
-                    <div class="step-marker">
-                        <span class="step-num">1</span>
-                        <div class="step-line"></div>
-                    </div>
-                    <div class="step-content">
+                    <div class="step-marker"><span class="step-num">1</span><div class="step-line"></div></div>
+                    <div class="step-body">
                         <h3>Install from Community Plugins</h3>
-                        <p>Search for Cove in Obsidian's Community Plugins list, install, and enable.</p>
+                        <p>Open Settings → Community plugins → Browse, search for Cove, then install and enable.</p>
                     </div>
                 </div>
-
                 <div class="step" data-reveal>
-                    <div class="step-marker">
-                        <span class="step-num">2</span>
-                        <div class="step-line"></div>
-                    </div>
-                    <div class="step-content">
-                        <h3>Set your Bookmarks Folder</h3>
-                        <p>In Settings, specify the folder where you want your bookmark markdown files to be saved.</p>
+                    <div class="step-marker"><span class="step-num">2</span><div class="step-line"></div></div>
+                    <div class="step-body">
+                        <h3>Set your bookmarks folder</h3>
+                        <p>In Cove's settings, choose the folder where bookmark files are stored. It defaults to <code>Bookmarks</code>.</p>
                     </div>
                 </div>
-
                 <div class="step" data-reveal>
-                    <div class="step-marker">
-                        <span class="step-num">3</span>
-                    </div>
-                    <div class="step-content">
-                        <h3>Add your first Bookmark</h3>
-                        <p>Click the Ribbon icon or use the command palette. The URL is fetched, metadata parsed, and saved as a markdown file.</p>
+                    <div class="step-marker"><span class="step-num">3</span></div>
+                    <div class="step-body">
+                        <h3>Add your first bookmark</h3>
+                        <p>Click the ribbon icon or run “Add bookmark.” The URL is fetched, metadata parsed, and saved as a Markdown file.</p>
                     </div>
                 </div>
             </div>
@@ -200,35 +167,36 @@
 
     <!-- ==================== INSTALL ==================== -->
     <section class="install" id="install">
-        <div class="section-inner">
-            <div class="section-header">
-                <p class="section-label">Get Started</p>
+        <div class="wrap">
+            <div class="section-head">
+                <p class="kicker manifest">Get started</p>
                 <h2 class="section-title">Install in under a minute.</h2>
             </div>
-
             <div class="install-grid">
-                <div class="install-card" data-reveal>
-                    <div class="install-card-header">
-                        <span class="install-card-label">Recommended</span>
-                        <h3>BRAT</h3>
-                    </div>
+                <div class="install-card install-card--rec" data-reveal>
+                    <span class="install-card-tag">Recommended</span>
+                    <h3>Community plugins</h3>
                     <ol>
-                        <li>Install the <a href="https://github.com/TfTHacker/Cove42-brat" target="_blank" rel="noopener">BRAT</a> community plugin.</li>
-                        <li>Open BRAT settings and click <strong>Add Beta plugin</strong>.</li>
-                        <li>Paste this repository URL.</li>
-                        <li>Enable <strong>Cove</strong> in your plugin list.</li>
+                        <li>Open <strong>Settings → Community plugins → Browse</strong>.</li>
+                        <li>Search for <strong>Cove</strong>.</li>
+                        <li>Click <strong>Install</strong>, then <strong>Enable</strong>.</li>
                     </ol>
                 </div>
-
                 <div class="install-card" data-reveal>
-                    <div class="install-card-header">
-                        <h3>Manual</h3>
-                    </div>
+                    <h3>BRAT</h3>
+                    <ol>
+                        <li>Install the <a href="https://github.com/TfTHacker/obsidian42-brat" target="_blank" rel="noopener">BRAT</a> plugin.</li>
+                        <li>Choose <strong>Add beta plugin</strong>.</li>
+                        <li>Enter <code>Real-Fruit-Snacks/Cove</code>.</li>
+                        <li>Enable <strong>Cove</strong>.</li>
+                    </ol>
+                </div>
+                <div class="install-card" data-reveal>
+                    <h3>Manual</h3>
                     <ol>
                         <li>Download <code>main.js</code>, <code>manifest.json</code>, and <code>styles.css</code> from the <a href="https://github.com/Real-Fruit-Snacks/Cove/releases/latest" target="_blank" rel="noopener">latest release</a>.</li>
-                        <li>Create <code>.Cove/plugins/{{REPO_NAME_LOWER}}/</code> inside your vault.</li>
-                        <li>Place the three files inside that folder.</li>
-                        <li>Reload Cove and enable the plugin.</li>
+                        <li>Place them in <code>.obsidian/plugins/cove/</code>.</li>
+                        <li>Enable <strong>Cove</strong> in Community plugins.</li>
                     </ol>
                 </div>
             </div>
@@ -237,48 +205,34 @@
 
     <!-- ==================== FOOTER ==================== -->
     <footer class="footer">
-        <div class="section-inner footer-inner">
-            <div class="footer-left">
-                <svg class="footer-logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-                <span>Cove</span>
-            </div>
-            <p class="footer-copy">Built for <a href="https://Cove.md" target="_blank" rel="noopener">Cove</a>. Open source under the MIT License. Created by <a href="https://github.com/Real-Fruit-Snacks" target="_blank" rel="noopener">Real-Fruit-Snacks</a>.</p>
+        <div class="wrap footer-inner">
+            <div class="footer-left"><img src="favicon.svg" alt="" width="22" height="22"><span>Cove</span></div>
+            <p class="footer-meta">MIT &middot; built for <a href="https://obsidian.md" target="_blank" rel="noopener">Obsidian</a> &middot; by <a href="https://github.com/Real-Fruit-Snacks" target="_blank" rel="noopener">Real-Fruit-Snacks</a></p>
         </div>
     </footer>
 
     <script>
-        // ---- Sticky nav ----
         const nav = document.getElementById('nav');
-        window.addEventListener('scroll', () => {
-            nav.classList.toggle('nav--scrolled', window.scrollY > 40);
-        });
+        const onScroll = () => nav.classList.toggle('nav--scrolled', window.scrollY > 32);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
 
-        // ---- Scroll reveal ----
         const revealEls = document.querySelectorAll('[data-reveal]');
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('revealed');
-                    revealObserver.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.15 });
-        revealEls.forEach(el => revealObserver.observe(el));
+        if ('IntersectionObserver' in window) {
+            const obs = new IntersectionObserver((entries) => {
+                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); obs.unobserve(e.target); } });
+            }, { threshold: 0.15 });
+            revealEls.forEach(el => obs.observe(el));
+        } else {
+            revealEls.forEach(el => el.classList.add('revealed'));
+        }
 
-        // ---- Smooth anchor scroll ----
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', function (e) {
+                const t = document.querySelector(this.getAttribute('href'));
+                if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
             });
         });
     </script>
 </body>
 </html>
-
-
-
-
