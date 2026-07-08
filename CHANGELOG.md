@@ -21,9 +21,24 @@ Reliability, performance, and security hardening. No user-facing feature changes
 ### Security
 - Bookmark URLs are validated on read: a non-`http(s)` URL placed in a bookmark file (e.g. `javascript:`) is ignored and can no longer reach `window.open` or a rendered link.
 
+## [1.0.2] — 2026-06-25
+
+Compliance fixes for the Obsidian community plugin submission. No functional or behavioral changes — `main.js` is byte-identical to 1.0.0.
+
+### Fixed
+- Removed all `!important` declarations from `styles.css` (six rules across the root container, sidebar links, the title cell, and the tree layout) to comply with Obsidian community plugin guidelines and pass automated validation.
+
+## [1.0.1] — unreleased
+
+Intermediate version bump during the community plugin submission process. Superseded by 1.0.2 before publication and never cut as a standalone GitHub release; recorded here because the version appears in `versions.json`.
+
+## [1.0.0] — 2026-06-20
+
+First public release: published to GitHub and submitted to the Obsidian community plugin directory. Feature set unchanged from the initial 0.1.0 build documented below. (An early `v1.0.0` tag was replaced by the unprefixed `1.0.0` tag that Obsidian requires.)
+
 ## [0.1.0] — 2026-04-30
 
-Initial release.
+Initial build.
 
 ### Added
 - Four switchable layouts: compact list, cards, kanban board, tree-with-preview
@@ -52,4 +67,6 @@ Initial release.
 - Settings tab with all the above plus per-status / per-tag / per-folder icon overrides
 
 [1.0.3]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.3
+[1.0.2]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.2
+[1.0.0]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.0
 [0.1.0]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/0.1.0
