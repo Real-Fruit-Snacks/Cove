@@ -7,6 +7,7 @@ const {
   Menu,
   Modal,
   Notice,
+  Platform,
   Plugin,
   PluginSettingTab,
   Setting,
@@ -155,7 +156,7 @@ function renderHighlighted(el, text, query) {
 //  File body utilities (notes editing)
 // ============================================================
 
-const FRONTMATTER_RE = /^---\n[\s\S]*?\n---\n?/;
+const FRONTMATTER_RE = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/;
 
 async function readBody(app, file) {
   const content = await app.vault.read(file);
@@ -163,13 +164,24 @@ async function readBody(app, file) {
   return m ? content.slice(m[0].length) : content;
 }
 
+// Body writes go through vault.process so the frontmatter prefix is located on
+// the exact content being rewritten — a concurrent processFrontMatter change
+// can't be reverted by a stale read.
 async function writeBody(app, file, newBody) {
-  const content = await app.vault.read(file);
-  const m = content.match(FRONTMATTER_RE);
-  const prefix = m ? m[0] : "";
-  const body = newBody == null ? "" : String(newBody);
-  const sep = prefix && body && !prefix.endsWith("\n") ? "\n" : "";
-  await app.vault.modify(file, prefix + sep + body);
+  await app.vault.process(file, (content) => {
+    const m = content.match(FRONTMATTER_RE);
+    if (!m && app.metadataCache.getFileCache(file)?.frontmatter) {
+      // The cache says this file has frontmatter but we can't locate it —
+      // bail out rather than risk overwriting metadata.
+      console.error("Cove: notes save skipped, frontmatter boundary not found:", file.path);
+      new Notice("Cove: couldn't save notes — unrecognized frontmatter layout.");
+      return content;
+    }
+    const prefix = m ? m[0] : "";
+    const body = newBody == null ? "" : String(newBody);
+    const sep = prefix && body && !prefix.endsWith("\n") ? "\n" : "";
+    return prefix + sep + body;
+  });
 }
 
 // ============================================================
@@ -204,9 +216,13 @@ async function fetchMetadata(url) {
       doc.querySelector('link[rel="icon"]')?.getAttribute("href") ||
       doc.querySelector('link[rel="shortcut icon"]')?.getAttribute("href") ||
       doc.querySelector('link[rel="apple-touch-icon"]')?.getAttribute("href");
-    const favicon = iconHref
-      ? new URL(iconHref, url).href
-      : `${new URL(url).origin}/favicon.ico`;
+    let favicon = "";
+    try {
+      const resolved = iconHref
+        ? new URL(iconHref, url).href
+        : `${new URL(url).origin}/favicon.ico`;
+      if (/^https?:/i.test(resolved) || /^data:image\//i.test(resolved)) favicon = resolved;
+    } catch {}
 
     const bodyText = doc.body?.innerText ?? "";
     const readingTime = bodyText.length > 200 ? readingTimeMinutes(bodyText) : undefined;
@@ -262,6 +278,48 @@ function buildBookmarksHtml(bookmarks) {
   }
   lines.push("</DL><p>");
   return lines.join("\n");
+}
+
+// ============================================================
+//  Confirm modal — replaces window.confirm (main-thread-blocking,
+//  unreliable on mobile webviews, discouraged by plugin guidelines)
+// ============================================================
+
+class ConfirmModal extends Modal {
+  constructor(app, opts) {
+    super(app);
+    this.opts = opts;
+    this.result = false;
+    this.onResult = opts.onResult;
+  }
+
+  onOpen() {
+    const { contentEl, titleEl } = this;
+    titleEl.setText(this.opts.title || "Are you sure?");
+    contentEl.empty();
+    contentEl.createEl("p", { text: this.opts.message });
+    const btns = new Setting(contentEl);
+    btns.addButton((b) => b.setButtonText("Cancel").onClick(() => this.close()));
+    btns.addButton((b) => {
+      b.setButtonText(this.opts.cta || "Confirm").onClick(() => {
+        this.result = true;
+        this.close();
+      });
+      if (this.opts.destructive === false) b.setCta();
+      else b.setWarning();
+    });
+  }
+
+  onClose() {
+    this.contentEl.empty();
+    this.onResult?.(this.result);
+  }
+
+  static ask(app, opts) {
+    return new Promise((resolve) => {
+      new ConfirmModal(app, { ...opts, onResult: resolve }).open();
+    });
+  }
 }
 
 // ============================================================
@@ -417,7 +475,9 @@ class AddBookmarkModal extends Modal {
 
     const buttons = new Setting(contentEl);
     buttons.addButton((b) => b.setButtonText("Cancel").onClick(() => this.close()));
-    buttons.addButton((b) =>
+    let ctaBtn;
+    buttons.addButton((b) => {
+      ctaBtn = b;
       b.setButtonText("Add").setCta().onClick(async () => {
         if (!/^https?:\/\//i.test(this.url)) {
           new Notice("Enter a URL starting with http(s)://");
@@ -427,7 +487,12 @@ class AddBookmarkModal extends Modal {
         // duplicate detection
         const existing = this.plugin.findByUrl(this.url);
         if (existing) {
-          const open = confirm(`This URL is already saved as "${existing.title}". Open it instead?`);
+          const open = await ConfirmModal.ask(this.app, {
+            title: "Already saved",
+            message: `This URL is already saved as "${existing.title}". Open it instead?`,
+            cta: "Open bookmark",
+            destructive: false,
+          });
           if (open) {
             this.close();
             await this.plugin.activateView();
@@ -451,13 +516,13 @@ class AddBookmarkModal extends Modal {
           new Notice(`Failed: ${e.message}`);
           b.setButtonText("Add").setDisabled(false);
         }
-      }),
-    );
+      });
+    });
 
     contentEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.isComposing) {
         e.preventDefault();
-        contentEl.querySelector(".mod-cta")?.click();
+        ctaBtn?.buttonEl?.click();
       }
     });
   }
@@ -524,12 +589,10 @@ class ImportModal extends Modal {
         if (parsed.length === 0) { new Notice("No <a href> entries found"); return; }
         b.setButtonText("Importing…").setDisabled(true);
         const wantFetch = cb.checked;
-        const prevFetch = this.plugin.settings.fetchMetadata;
-        this.plugin.settings.fetchMetadata = wantFetch;
         let n = 0;
         for (const p of parsed) {
           try {
-            const file = await this.plugin.createBookmark(p.url, { skipFetch: !wantFetch });
+            const file = await this.plugin.createBookmark(p.url, { fetch: wantFetch });
             await this.plugin.updateFrontmatter(file, (fm) => {
               if (p.title) fm.title = p.title;
               if (p.tags.length) fm.tags = p.tags;
@@ -541,8 +604,6 @@ class ImportModal extends Modal {
             console.error("import failed", p.url, e);
           }
         }
-        this.plugin.settings.fetchMetadata = prevFetch;
-        await this.plugin.saveSettings();
         new Notice(`Imported ${n} bookmark${n === 1 ? "" : "s"}`);
         this.close();
       }),
@@ -584,7 +645,9 @@ class NewFolderModal extends Modal {
 
     const btns = new Setting(contentEl);
     btns.addButton((b) => b.setButtonText("Cancel").onClick(() => this.close()));
-    btns.addButton((b) =>
+    let ctaBtn;
+    btns.addButton((b) => {
+      ctaBtn = b;
       b.setButtonText("Create").setCta().onClick(async () => {
         const name = (input?.value || "").trim().replace(/^\/+|\/+$/g, "");
         if (!name) return;
@@ -597,13 +660,13 @@ class NewFolderModal extends Modal {
         } catch (e) {
           new Notice(`Failed: ${e.message}`);
         }
-      }),
-    );
+      });
+    });
 
     contentEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.isComposing) {
         e.preventDefault();
-        contentEl.querySelector(".mod-cta")?.click();
+        ctaBtn?.buttonEl?.click();
       }
     });
   }
@@ -640,7 +703,9 @@ class RenameFolderModal extends Modal {
 
     const btns = new Setting(contentEl);
     btns.addButton((b) => b.setButtonText("Cancel").onClick(() => this.close()));
-    btns.addButton((b) =>
+    let ctaBtn;
+    btns.addButton((b) => {
+      ctaBtn = b;
       b.setButtonText("Rename").setCta().onClick(async () => {
         const newName = (input?.value || "").trim().replace(/^\/+|\/+$/g, "");
         if (!newName || newName === this.node.name) { this.close(); return; }
@@ -670,13 +735,13 @@ class RenameFolderModal extends Modal {
         } catch (e) {
           new Notice(`Failed: ${e.message}`);
         }
-      }),
-    );
+      });
+    });
 
     contentEl.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.isComposing) {
         e.preventDefault();
-        contentEl.querySelector(".mod-cta")?.click();
+        ctaBtn?.buttonEl?.click();
       }
     });
   }
@@ -1374,7 +1439,12 @@ function renderBookmarkEditor(host, plugin, b, view) {
     });
   });
   mkBtn("trash-2", "Delete", async () => {
-    if (!confirm(`Delete "${b.title}"? Moves the file to system trash.`)) return;
+    const ok = await ConfirmModal.ask(plugin.app, {
+      title: "Delete bookmark",
+      message: `Delete "${b.title}"? Moves the file to system trash.`,
+      cta: "Delete",
+    });
+    if (!ok) return;
     await plugin.app.vault.trash(b.file, true);
   });
 }
@@ -1474,6 +1544,7 @@ class CoveView extends ItemView {
     super(leaf);
     this.plugin = plugin;
     this.renderHandle = null;
+    this._popoverClose = null;
     this.state = {
       search: "",
       statusFilter: "all",
@@ -1503,7 +1574,30 @@ class CoveView extends ItemView {
   }
 
   async onClose() {
+    if (this.renderHandle != null) {
+      window.clearTimeout(this.renderHandle);
+      this.renderHandle = null;
+    }
+    this.removePopoverHandler();
     this.containerEl.empty();
+  }
+
+  removePopoverHandler() {
+    if (this._popoverClose) {
+      document.removeEventListener("click", this._popoverClose);
+      this._popoverClose = null;
+    }
+  }
+
+  openPluginSettings() {
+    // app.setting is not part of the public API — guard against removal.
+    const s = this.app.setting;
+    if (s?.open && s?.openTabById) {
+      s.open();
+      s.openTabById(this.plugin.manifest.id);
+    } else {
+      new Notice("Open Settings → Community plugins → Cove to customize.");
+    }
   }
 
   scheduleRender() {
@@ -1625,6 +1719,7 @@ class CoveView extends ItemView {
   // --- render --------------------------------------------------
 
   render() {
+    if (!this.state.columnsOpen) this.removePopoverHandler();
     const root = this.containerEl.children[1];
     root.empty();
 
@@ -1650,10 +1745,7 @@ class CoveView extends ItemView {
     h1.createSpan({ text: "Status" });
     const gear = h1.createSpan({ cls: "cv-side-gear", attr: { "aria-label": "Customize status icons" } });
     setIcon(gear, "settings");
-    gear.addEventListener("click", () => {
-      this.app.setting.open();
-      this.app.setting.openTabById(this.plugin.manifest.id);
-    });
+    gear.addEventListener("click", () => this.openPluginSettings());
 
     const allLink = side.createEl("a", { cls: "cv-side-link" + (this.state.statusFilter === "all" ? " is-active" : "") });
     const allLhs = allLink.createSpan({ cls: "cv-side-lhs" });
@@ -1922,10 +2014,7 @@ class CoveView extends ItemView {
       attr: { "aria-label": "Cove settings", title: "Settings" },
     });
     setIcon(settingsBtn, "settings");
-    settingsBtn.addEventListener("click", () => {
-      this.app.setting.open();
-      this.app.setting.openTabById(this.plugin.manifest.id);
-    });
+    settingsBtn.addEventListener("click", () => this.openPluginSettings());
 
     const importBtn = head.createEl("button", {
       cls: "cv-icon-btn",
@@ -1955,7 +2044,12 @@ class CoveView extends ItemView {
       this.mkAction(tools, "folder-input", "Move…", () => this.openBulkMove());
       this.mkAction(tools, "archive", "Archive", async () => { await this.bulkSetStatus("archive"); });
       this.mkAction(tools, "trash-2", "Delete", async () => {
-        if (!confirm(`Delete ${selected} bookmark(s)? Moves files to system trash.`)) return;
+        const ok = await ConfirmModal.ask(this.app, {
+          title: "Delete bookmarks",
+          message: `Delete ${selected} bookmark(s)? Moves files to system trash.`,
+          cta: "Delete",
+        });
+        if (!ok) return;
         await this.bulkDelete();
       });
       this.mkAction(tools, "x", "Clear", () => { this.state.selected.clear(); this.render(); });
@@ -2021,13 +2115,16 @@ class CoveView extends ItemView {
     pop.createDiv({ cls: "cv-popover-section", text: "Optional" });
     for (const c of ALL_COLUMNS.slice(5)) renderToggle(c);
 
+    this.removePopoverHandler();
     const closeOnOutside = (e) => {
       if (!pop.contains(e.target)) {
         this.state.columnsOpen = false;
+        if (this._popoverClose === closeOnOutside) this._popoverClose = null;
         document.removeEventListener("click", closeOnOutside);
         this.render();
       }
     };
+    this._popoverClose = closeOnOutside;
     setTimeout(() => document.addEventListener("click", closeOnOutside), 0);
   }
 
@@ -2595,7 +2692,12 @@ class CoveView extends ItemView {
     const msg = count > 0
       ? `Delete folder "${node.path}" and ${count} bookmark${count === 1 ? "" : "s"} inside? Files move to system trash.`
       : `Delete empty folder "${node.path}"?`;
-    if (!confirm(msg)) return;
+    const ok = await ConfirmModal.ask(this.app, {
+      title: "Delete folder",
+      message: msg,
+      cta: "Delete",
+    });
+    if (!ok) return;
 
     const fullPath = normalizePath(`${this.plugin.settings.folder}/${node.path}`);
     const folder = this.app.vault.getAbstractFileByPath(fullPath);
@@ -2710,7 +2812,12 @@ class CoveView extends ItemView {
     );
     m.addItem((it) =>
       it.setTitle("Delete").setIcon("trash-2").onClick(async () => {
-        if (!confirm(`Delete "${b.title}"?`)) return;
+        const ok = await ConfirmModal.ask(this.app, {
+          title: "Delete bookmark",
+          message: `Delete "${b.title}"? Moves the file to system trash.`,
+          cta: "Delete",
+        });
+        if (!ok) return;
         await this.app.vault.trash(b.file, true);
       }),
     );
@@ -2796,6 +2903,7 @@ class CoveView extends ItemView {
 
 class CovePlugin extends Plugin {
   async onload() {
+    this._bookmarkCache = null;
     await this.loadSettings();
 
     this.registerView(VIEW_TYPE, (leaf) => new CoveView(leaf, this));
@@ -2834,16 +2942,23 @@ class CovePlugin extends Plugin {
     this.addSettingTab(new CoveSettingTab(this.app, this));
 
     const refresh = debounce(() => this.refreshViews(), 200, true);
-    this.registerEvent(this.app.metadataCache.on("changed", refresh));
-    this.registerEvent(this.app.vault.on("create", refresh));
-    this.registerEvent(this.app.vault.on("delete", refresh));
-    this.registerEvent(this.app.vault.on("rename", refresh));
+    const onVaultChange = () => {
+      // invalidate immediately (readers must never see stale data);
+      // re-render on the debounce.
+      this.invalidateBookmarkCache();
+      refresh();
+    };
+    this.registerEvent(this.app.metadataCache.on("changed", onVaultChange));
+    this.registerEvent(this.app.vault.on("create", onVaultChange));
+    this.registerEvent(this.app.vault.on("delete", onVaultChange));
+    this.registerEvent(this.app.vault.on("rename", onVaultChange));
 
     this.app.workspace.onLayoutReady(() => this.maybeRunPeriodicLinkCheck());
   }
 
-  async onunload() {
-    // Obsidian auto-detaches view leaves; nothing to do.
+  onunload() {
+    // Commands, events, ribbon, and view leaves are all registered through
+    // the Plugin/Component lifecycle and cleaned up by Obsidian automatically.
   }
 
   async loadSettings() {
@@ -2855,7 +2970,12 @@ class CovePlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+    this.invalidateBookmarkCache(); // settings.folder may have changed
     this.refreshViews();
+  }
+
+  invalidateBookmarkCache() {
+    this._bookmarkCache = null;
   }
 
   refreshViews() {
@@ -2885,16 +3005,6 @@ class CovePlugin extends Plugin {
     return f;
   }
 
-  async uniquePath(slug) {
-    const base = normalizePath(`${this.settings.folder}/${slug}`);
-    let path = `${base}.md`;
-    let i = 1;
-    while (await this.app.vault.adapter.exists(path)) {
-      path = `${base}-${i++}.md`;
-    }
-    return path;
-  }
-
   findByUrl(url) {
     const target = String(url).trim().toLowerCase();
     if (!target) return null;
@@ -2919,15 +3029,19 @@ class CovePlugin extends Plugin {
       await this.app.vault.createFolder(targetFolderPath);
     }
 
-    const meta = (this.settings.fetchMetadata && !opts.skipFetch)
-      ? await fetchMetadata(url) : null;
+    // opts.fetch (boolean) overrides the global setting; opts.skipFetch only
+    // suppresses. Used by the importer's per-run checkbox.
+    const shouldFetch = typeof opts.fetch === "boolean"
+      ? opts.fetch
+      : (this.settings.fetchMetadata && !opts.skipFetch);
+    const meta = shouldFetch ? await fetchMetadata(url) : null;
 
     const title = (meta?.title || url).replace(/\s+/g, " ").trim();
     const slug = slugify(title);
-    let path = `${targetFolderPath}/${slug}.md`;
+    let path = normalizePath(`${targetFolderPath}/${slug}.md`);
     let i = 1;
-    while (await this.app.vault.adapter.exists(path)) {
-      path = `${targetFolderPath}/${slug}-${i++}.md`;
+    while (this.app.vault.getAbstractFileByPath(path)) {
+      path = normalizePath(`${targetFolderPath}/${slug}-${i++}.md`);
     }
 
     const file = await this.app.vault.create(path, "");
@@ -2949,11 +3063,21 @@ class CovePlugin extends Plugin {
   }
 
   async updateFrontmatter(file, mut) {
-    await this.app.fileManager.processFrontMatter(file, mut);
+    try {
+      await this.app.fileManager.processFrontMatter(file, mut);
+    } catch (e) {
+      // processFrontMatter throws on malformed YAML — surface it instead of
+      // letting fire-and-forget click handlers fail silently.
+      console.error("Cove: frontmatter update failed:", file.path, e);
+      new Notice(`Cove: couldn't update ${file.name} — ${e.message}`);
+    }
   }
 
   loadBookmarks() {
     const path = normalizePath(this.settings.folder);
+    if (this._bookmarkCache && this._bookmarkCache.folder === path) {
+      return this._bookmarkCache.items;
+    }
     const folder = this.app.vault.getAbstractFileByPath(path);
     if (!(folder instanceof TFolder)) return [];
 
@@ -2965,12 +3089,16 @@ class CovePlugin extends Plugin {
         } else if (child instanceof TFile && child.extension === "md") {
           const fm = this.app.metadataCache.getFileCache(child)?.frontmatter;
           if (!fm?.url) continue;
+          const url = String(fm.url).trim();
+          // Only http(s) bookmarks are ever created; anything else in
+          // frontmatter (e.g. javascript:) must not reach window.open/href.
+          if (!/^https?:\/\//i.test(url)) continue;
           result.push({
             file: child,
             folder: rel,
-            url: String(fm.url),
+            url,
             title: String(fm.title || child.basename),
-            domain: String(fm.domain || extractDomain(String(fm.url))),
+            domain: String(fm.domain || extractDomain(url)),
             description: String(fm.description ?? ""),
             status: STATUS_ORDER.includes(fm.status) ? fm.status : "inbox",
             tags: Array.isArray(fm.tags) ? fm.tags.map(String) : [],
@@ -2989,6 +3117,7 @@ class CovePlugin extends Plugin {
       }
     };
     walk(folder, "");
+    this._bookmarkCache = { folder: path, items: result };
     return result;
   }
 
@@ -3063,6 +3192,16 @@ class CovePlugin extends Plugin {
     const items = this.loadBookmarks();
     if (items.length === 0) { new Notice("No bookmarks to export"); return; }
     const html = buildBookmarksHtml(items);
+    if (Platform.isMobileApp) {
+      // Synthetic <a download> clicks fail silently on mobile — write the
+      // export into the vault instead.
+      let path = "cove-bookmarks.html";
+      let i = 1;
+      while (this.app.vault.getAbstractFileByPath(path)) path = `cove-bookmarks-${i++}.html`;
+      await this.app.vault.create(path, html);
+      new Notice(`Exported ${items.length} bookmarks to "${path}" in your vault`);
+      return;
+    }
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -3089,15 +3228,24 @@ class CovePlugin extends Plugin {
   async runLinkHealthCheck(verbose) {
     const items = this.loadBookmarks();
     let broken = 0;
-    for (const b of items) {
-      const ok = await checkLinkAlive(b.url);
-      await this.updateFrontmatter(b.file, (fm) => {
-        fm.lastChecked = new Date().toISOString();
-        if (!ok) { fm.status = "broken"; }
-        else if (b.status === "broken") fm.status = "inbox";
-      });
-      if (!ok) broken++;
-    }
+    const queue = [...items];
+    // Run a few checks in parallel, and only rewrite files whose status
+    // actually changes — an unchanged vault stays byte-identical (no
+    // mtime/sync churn, no re-render cascade per bookmark).
+    const worker = async () => {
+      for (let b = queue.shift(); b; b = queue.shift()) {
+        const ok = await checkLinkAlive(b.url);
+        if (!ok) broken++;
+        const newStatus = !ok ? "broken" : b.status === "broken" ? "inbox" : null;
+        if (newStatus && newStatus !== b.status) {
+          await this.updateFrontmatter(b.file, (fm) => {
+            fm.lastChecked = new Date().toISOString();
+            fm.status = newStatus;
+          });
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(4, queue.length) }, worker));
     this.settings.lastLinkCheck = Date.now();
     await this.saveData(this.settings);
     if (verbose) console.log(`Cove link check: ${items.length} total, ${broken} broken`);

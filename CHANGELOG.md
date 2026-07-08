@@ -2,6 +2,25 @@
 
 All notable changes to Cove are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] — 2026-07-07
+
+Reliability, performance, and security hardening. No user-facing feature changes.
+
+### Fixed
+- Saving notes on a bookmark whose file used Windows (CRLF) line endings could fail to detect the frontmatter block and overwrite the bookmark's metadata. Note saves are now CRLF-safe and go through an atomic read-modify-write (`vault.process`).
+- Editing a bookmark's notes and changing its status/tags/pin at nearly the same moment could revert the metadata change, due to a race between the debounced notes save and the frontmatter update. Both paths are now atomic.
+- Frontmatter updates that encountered malformed YAML failed silently; they now surface an error notice instead of leaving the click with no visible effect.
+
+### Changed
+- Link health checks now rewrite only the bookmarks whose status actually changes, instead of stamping every file on every run — no more needless sync churn or full re-render cascades. Checks also run with limited concurrency for faster completion.
+- Bookmark data is cached per vault change rather than recomputed several times per render, keeping large collections responsive.
+- Destructive confirmations now use in-app dialogs instead of the blocking `window.confirm`, which is unreliable in the mobile app.
+- HTML export on mobile now writes the file into the vault (browser-style downloads fail silently there).
+- The list-view column popover's outside-click handler and the view's pending render timer are now torn down with the view, preventing stray listeners after the view closes.
+
+### Security
+- Bookmark URLs are validated on read: a non-`http(s)` URL placed in a bookmark file (e.g. `javascript:`) is ignored and can no longer reach `window.open` or a rendered link.
+
 ## [0.1.0] — 2026-04-30
 
 Initial release.
@@ -32,4 +51,5 @@ Initial release.
 - Customizable column visibility and sort field/direction
 - Settings tab with all the above plus per-status / per-tag / per-folder icon overrides
 
+[1.0.3]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.3
 [0.1.0]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/0.1.0
