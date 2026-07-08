@@ -2,6 +2,13 @@
 
 All notable changes to Cove are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] — 2026-07-07
+
+Maintenance release — no functional changes to the plugin (`main.js` and `styles.css` are unchanged from 1.0.5).
+
+### Changed
+- CI: bumped `actions/checkout` from v4 to v5 in the release workflow; the v4 action was being forced onto the deprecated Node 20 runner.
+
 ## [1.0.5] — 2026-07-07
 
 Follow-up hardening from a code review.
@@ -94,6 +101,7 @@ Initial build.
 - Customizable column visibility and sort field/direction
 - Settings tab with all the above plus per-status / per-tag / per-folder icon overrides
 
+[1.0.6]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.6
 [1.0.5]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.5
 [1.0.4]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.4
 [1.0.3]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.3
