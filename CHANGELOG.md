@@ -2,6 +2,21 @@
 
 All notable changes to Cove are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] — 2026-07-07
+
+Search overhaul.
+
+### Added
+- The search box now searches bookmark **note bodies**, not just the title/description/tags/URL metadata. Note text is indexed on demand (frontmatter stripped, read from Obsidian's cache) and refreshed as files change.
+
+### Fixed
+- The search box no longer loses focus and cursor position while typing. Searching now updates only the results list instead of rebuilding the entire view, so the input you are typing into is never torn down.
+- Match highlighting is now a plain case-insensitive substring scan, fixing fragile edge cases around adjacent and mixed-case matches and treating the query literally (no regex quirks).
+- Corrected the search box placeholder, which previously advertised note search that was not implemented.
+
+### Changed
+- Search re-renders are scoped to the toolbar and results rather than the whole view, eliminating the per-keystroke full-view rebuild and keeping search responsive on large collections.
+
 ## [1.0.3] — 2026-07-07
 
 Reliability, performance, and security hardening. No user-facing feature changes.
@@ -66,6 +81,7 @@ Initial build.
 - Customizable column visibility and sort field/direction
 - Settings tab with all the above plus per-status / per-tag / per-folder icon overrides
 
+[1.0.4]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.4
 [1.0.3]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.3
 [1.0.2]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.2
 [1.0.0]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.0

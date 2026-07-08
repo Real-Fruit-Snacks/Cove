@@ -127,10 +127,6 @@ function readingTimeMinutes(text) {
   return Math.max(1, Math.round(words / 220));
 }
 
-function escapeRegex(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 function colorForTag(tag) {
   let h = 0;
   for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
@@ -139,16 +135,19 @@ function colorForTag(tag) {
 
 function renderHighlighted(el, text, query) {
   el.empty();
-  if (!query || !text) { el.setText(text || ""); return; }
-  const re = new RegExp(`(${escapeRegex(query)})`, "ig");
-  const parts = String(text).split(re);
-  for (const p of parts) {
-    if (re.test(p) && p.toLowerCase() === query.toLowerCase()) {
-      el.createEl("mark", { text: p });
-      re.lastIndex = 0;
-    } else if (p) {
-      el.appendText(p);
-    }
+  const s = text == null ? "" : String(text);
+  const q = query ? String(query) : "";
+  if (!q || !s) { el.setText(s); return; }
+  // Case-insensitive substring scan — no stateful regex, preserves original casing.
+  const lower = s.toLowerCase();
+  const ql = q.toLowerCase();
+  let i = 0;
+  while (i <= s.length) {
+    const idx = lower.indexOf(ql, i);
+    if (idx === -1) { el.appendText(s.slice(i)); break; }
+    if (idx > i) el.appendText(s.slice(i, idx));
+    el.createEl("mark", { text: s.slice(idx, idx + ql.length) });
+    i = idx + ql.length;
   }
 }
 
@@ -1545,6 +1544,8 @@ class CoveView extends ItemView {
     this.plugin = plugin;
     this.renderHandle = null;
     this._popoverClose = null;
+    this._toolsEl = null;
+    this._bodyEl = null;
     this.state = {
       search: "",
       statusFilter: "all",
@@ -1571,6 +1572,11 @@ class CoveView extends ItemView {
     this.containerEl.children[1].addClass("cv-root");
     this.installKeyboardHandler();
     this.render();
+    // Warm the note-body index in the background so the first search already
+    // covers notes; re-render results if it actually loaded anything.
+    this.plugin.refreshNoteIndex().then((changed) => {
+      if (changed && this.state.search.trim()) this.rerenderResults();
+    });
   }
 
   async onClose() {
@@ -1678,7 +1684,9 @@ class CoveView extends ItemView {
       if (q) {
         const hay = [b.title, b.domain, b.description, b.url, b.tags.join(" ")]
           .join(" ").toLowerCase();
-        if (!hay.includes(q)) return false;
+        // noteText() is already lowercased; check both the metadata haystack
+        // and the bookmark's note body.
+        if (!hay.includes(q) && !this.plugin.noteText(b.file.path).includes(q)) return false;
       }
       return true;
     });
@@ -1727,13 +1735,31 @@ class CoveView extends ItemView {
     this.renderSidebar(app.createDiv({ cls: "cv-side" }));
     const main = app.createDiv({ cls: "cv-main" });
     this.renderHeader(main.createDiv({ cls: "cv-head" }));
-    this.renderToolbar(main.createDiv({ cls: "cv-tools" }));
+    this._toolsEl = main.createDiv({ cls: "cv-tools" });
+    this.renderToolbar(this._toolsEl);
 
-    const body = main.createDiv({ cls: "cv-body" });
+    this._bodyEl = main.createDiv({ cls: "cv-body" });
+    this.renderLayoutBody(this._bodyEl);
+  }
+
+  renderLayoutBody(body) {
+    body.empty();
     if (this.state.layout === "list") this.renderListLayout(body);
     else if (this.state.layout === "cards") this.renderCardsLayout(body);
     else if (this.state.layout === "board") this.renderBoardLayout(body);
     else if (this.state.layout === "tree") this.renderTreeLayout(body);
+  }
+
+  // Re-render only the toolbar + results, leaving the sidebar and header
+  // (including the focused search input) in place. Used by search so typing
+  // never tears down the input.
+  rerenderResults() {
+    // Bail if the view was torn down (e.g. closed) while a debounced search
+    // handler was in flight — the containers are detached.
+    if (!this._bodyEl || !this._bodyEl.isConnected || !this._toolsEl) return;
+    this._toolsEl.empty();
+    this.renderToolbar(this._toolsEl);
+    this.renderLayoutBody(this._bodyEl);
   }
 
   renderSidebar(side) {
@@ -1987,13 +2013,20 @@ class CoveView extends ItemView {
     const input = search.createEl("input", {
       attr: {
         type: "search",
-        placeholder: "Search title, description, notes…  (press / to focus)",
+        placeholder: "Search title, description, tags, notes…  (press / to focus)",
         value: this.state.search,
       },
     });
     input.addEventListener(
       "input",
-      debounce(() => { this.state.search = input.value; this.render(); }, 120, true),
+      debounce(async () => {
+        this.state.search = input.value;
+        // Make sure note bodies are indexed so they're searchable, then update
+        // only the results — the header (and this input's focus/caret) is left
+        // untouched.
+        await this.plugin.refreshNoteIndex();
+        this.rerenderResults();
+      }, 120, true),
     );
 
     const switcher = head.createDiv({ cls: "cv-switcher" });
@@ -2904,6 +2937,8 @@ class CoveView extends ItemView {
 class CovePlugin extends Plugin {
   async onload() {
     this._bookmarkCache = null;
+    this._noteIndex = new Map();       // path -> { mtime, text (lowercased body) }
+    this._noteIndexPromise = null;
     await this.loadSettings();
 
     this.registerView(VIEW_TYPE, (leaf) => new CoveView(leaf, this));
@@ -3119,6 +3154,47 @@ class CovePlugin extends Plugin {
     walk(folder, "");
     this._bookmarkCache = { folder: path, items: result };
     return result;
+  }
+
+  // Lowercased note body for a bookmark file, or "" if not yet indexed.
+  noteText(path) {
+    const e = this._noteIndex.get(path);
+    return e ? e.text : "";
+  }
+
+  // Reads and caches the note body (frontmatter stripped, lowercased) for every
+  // bookmark, skipping files whose mtime is unchanged. Concurrent callers share
+  // one in-flight pass. Resolves to true if the index changed. Uses cachedRead
+  // (Obsidian's in-memory read) so a warm index is cheap to refresh.
+  refreshNoteIndex() {
+    if (this._noteIndexPromise) return this._noteIndexPromise;
+    const run = (async () => {
+      const items = this.loadBookmarks();
+      const seen = new Set();
+      let changed = false;
+      for (const b of items) {
+        const path = b.file.path;
+        seen.add(path);
+        const mtime = b.file.stat?.mtime ?? 0;
+        const cached = this._noteIndex.get(path);
+        if (cached && cached.mtime === mtime) continue;
+        let text = "";
+        try {
+          const content = await this.app.vault.cachedRead(b.file);
+          text = content.replace(FRONTMATTER_RE, "").toLowerCase();
+        } catch (e) {
+          console.error("Cove: note index read failed:", path, e);
+        }
+        this._noteIndex.set(path, { mtime, text });
+        changed = true;
+      }
+      for (const key of [...this._noteIndex.keys()]) {
+        if (!seen.has(key)) { this._noteIndex.delete(key); changed = true; }
+      }
+      return changed;
+    })();
+    this._noteIndexPromise = run.finally(() => { this._noteIndexPromise = null; });
+    return this._noteIndexPromise;
   }
 
   loadFolderTree() {
