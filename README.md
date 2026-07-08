@@ -1,13 +1,17 @@
 <div align="center">
 
-  # Cove
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg" />
+    <img alt="Cove" src="docs/assets/logo-light.svg" width="480" />
+  </picture>
 
-  **Bookmark manager for Obsidian — every bookmark is a markdown file with YAML frontmatter under a folder of your choice.**
+  **A bookmark manager for Obsidian where every bookmark is a Markdown file with YAML frontmatter — no proprietary database, no lock-in.**
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-cba6f7.svg)](LICENSE)
-  [![Version](https://img.shields.io/badge/version-1.0.0-89b4fa)](https://github.com/Real-Fruit-Snacks/Cove/releases)
-  
-  [Report Issue](https://github.com/Real-Fruit-Snacks/Cove/issues)
+  [![Latest release](https://img.shields.io/github/v/release/Real-Fruit-Snacks/Cove?color=89b4fa&label=release)](https://github.com/Real-Fruit-Snacks/Cove/releases)
+  [![Obsidian](https://img.shields.io/badge/Obsidian-1.5%2B-a6e3a1.svg)](https://obsidian.md)
+
+  [Documentation](https://real-fruit-snacks.github.io/Cove/) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/Real-Fruit-Snacks/Cove/issues)
 
 </div>
 
@@ -15,93 +19,118 @@
 
 ## Overview
 
-Cove is an **Obsidian plugin** that treats each bookmark as a `.md` file with YAML frontmatter — nothing more. There is no proprietary database, no `.json` cache, no migration layer, and no sync layer. If you uninstall Cove tomorrow, every bookmark is still a plain markdown note in your vault, openable, searchable, and exportable like everything else Obsidian touches.
+Cove stores each bookmark as a single `.md` file with YAML frontmatter, inside a folder you choose. There is no proprietary database and no cache you depend on — only your notes. If you disable Cove tomorrow, every bookmark remains a plain Markdown file in your vault: openable, searchable, versionable, and syncable like everything else Obsidian touches. The plugin keeps a lightweight in-memory index for speed, but it is derived entirely from those files and never the source of truth.
 
-The same dataset renders through four switchable layouts:
-- **Compact List**: For dense triage.
-- **Cards**: For visual browsing with `og:image` heroes.
-- **Kanban**: For status workflows (Inbox → Reading → Done → Archive).
-- **Tree**: For a list-and-preview reading layout.
+Adding a URL fetches the page's `og:title`, `og:description`, `og:image`, favicon, author, and estimated reading time, then writes them into the new note's frontmatter. Folders map one-to-one to real subfolders under your bookmarks root, and the same dataset renders through four switchable layouts:
 
-Adding a URL automatically fetches `og:title`, `og:description`, `og:image`, favicon, author, and reading time via Obsidian's built-in APIs. Folders map 1:1 to real filesystem subfolders inside your designated bookmarks root. Drag any row, card, or tree item onto any folder to intuitively move it.
+- **List** — a dense, sortable table for fast triage.
+- **Cards** — visual browsing with `og:image` heroes.
+- **Board** — a Kanban view over the status workflow (Inbox → Reading → Done → Archive).
+- **Tree** — a list-and-preview reading layout with an inline editor.
 
+## Features
+
+- **Plain-Markdown storage** — one `.md` file per bookmark; your vault is the database and your export is the backup.
+- **Four switchable layouts** — List, Cards, Board, and Tree, all rendering the same underlying files.
+- **Automatic metadata** — title, description, cover image, favicon, author, and reading time, fetched via Obsidian's networking API.
+- **Inline editor** — edit title, URL, description, status, tags, folder, and a custom icon in place, plus a Markdown notes field with Edit/Preview tabs.
+- **Full-text search** — matches across title, description, domain, URL, tags, **and each bookmark's notes**, with match highlighting.
+- **Real folders** — mapped to actual vault subfolders; create, rename, set an icon, delete, and drag rows between them (nesting supported).
+- **Status workflow** — Inbox, Reading, Done, Archive, and Broken, changeable from a menu, the board, or the inline editor.
+- **Tags** — a pill editor with autocomplete, intersecting sidebar filters, and optional per-tag Lucide icons and colors.
+- **Smart filters** — Recently added, Pinned, Untagged, and Broken links.
+- **Pinned bookmarks** — kept at the top regardless of the active sort.
+- **Custom icons** — per bookmark, per tag, per folder, and per status, chosen from a searchable Lucide icon picker.
+- **Bulk actions** — multi-select across any layout to tag, set status, move, archive, or delete in one step.
+- **Link health checks** — run on demand or periodically in the background; unreachable URLs are flagged as Broken.
+- **Import & export** — read and write the Netscape Bookmarks HTML format used by Chrome, Firefox, Safari, Pocket, Raindrop, and Pinboard.
+- **Desktop and mobile** — works on both; destructive actions use in-app dialogs and export adapts to the mobile app.
+
+## Installation
+
+**Requires Obsidian 1.5 or newer.**
+
+### Community plugins (recommended)
+
+1. Open **Settings → Community plugins → Browse**.
+2. Search for **Cove**, then **Install** and **Enable**.
+
+### BRAT (for the latest pre-release)
+
+Install [BRAT](https://github.com/TfTHacker/obsidian42-brat), then add `Real-Fruit-Snacks/Cove` as a beta plugin.
+
+### Manual
+
+Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/Real-Fruit-Snacks/Cove/releases/latest) into `<your-vault>/.obsidian/plugins/cove/`, then enable Cove under **Settings → Community plugins**.
+
+## Getting started
+
+1. Click the **bookmark** ribbon icon (or run **Open Cove** from the command palette) to open the view.
+2. Set your storage folder under **Settings → Cove → Bookmarks folder** (defaults to `Bookmarks`).
+3. Click **+ Add** — or press `Ctrl/Cmd+P` → **Add bookmark**. The dialog pre-fills from your clipboard if it holds a URL, fetches metadata in the background, and warns you if the URL is already saved.
+
+### Commands
+
+| Command | Description |
+| --- | --- |
+| Open Cove | Open or focus the Cove view |
+| Add bookmark | Add a bookmark from a URL |
+| Import bookmarks (HTML) | Import a Netscape bookmarks file |
+| Export bookmarks to HTML | Export all bookmarks to a browser-importable file |
+| Check link health | Check every bookmark and flag unreachable links |
+
+### Keyboard shortcuts
+
+`j` / `k` / arrows move focus · `e` toggles the inline editor · `x` toggles selection · `Enter` opens in the browser · `/` focuses search · `Esc` clears the selection.
+
+## How a bookmark is stored
+
+Every bookmark is just a Markdown file. Cove reads and writes its frontmatter through Obsidian's `FileManager`, so the YAML stays valid and internal links stay intact. A typical file looks like:
+
+```markdown
+---
+url: https://example.com/great-article
+title: A Great Article
+domain: example.com
+description: A short summary pulled from the page's metadata.
+status: reading
+tags:
+  - research
+  - typescript
+added: 2026-07-07T14:03:00.000Z
+favicon: https://example.com/favicon.ico
+cover: https://example.com/og-image.png
+author: Jane Doe
+reading-time: 7
+pinned: true
 ---
 
-## Key Features
-
-- **No Lock-In Storage**: One `.md` per bookmark. Your export is the storage.
-- **Multiple Views**: Instantly switch between Compact list, Cards, Kanban board, or Tree-with-preview.
-- **Auto-Fetched Metadata**: Automatically extracts title, description, `og:image`, favicon, author, and reading time.
-- **Real Folders**: Map directly to vault subfolders. Features drag-to-move and per-folder icons.
-- **Workflow Status**: Track items through Inbox, Reading, Done, Archive, or Broken.
-- **Tag Management**: Support for pills with autocomplete, sidebar filter intersection, and custom per-tag Lucide icons.
-- **Health Checks**: Periodic background checking flags unreachable URLs as broken.
-- **Bulk Operations**: Multi-select across views to batch tag, move, or archive items.
-- **Netscape Import**: Easy import from Chrome, Firefox, Safari, Pocket, Raindrop, or Pinboard.
-
----
-
-## Getting Started / Installation
-
-**Prerequisites:** Obsidian 1.5+
-
-### Manual Installation
-1. Navigate to your vault's plugin folder:
-```bash
-cd <your-vault>/.obsidian/plugins
-git clone https://github.com/Real-Fruit-Snacks/Cove.git cove
+Your own Markdown notes go here, below the frontmatter.
 ```
-2. In Obsidian, go to **Settings → Community plugins → Cove → Enable**.
 
-### Via BRAT
-If you use [BRAT](https://github.com/TfTHacker/obsidian42-brat), simply add this repository URL through the BRAT settings.
+Most fields are optional; `pinnedAt`, `opened`, and `lastChecked` are added automatically as you pin, open, and check links.
 
----
-
-## Usage
-
-**Creating your first bookmark:**
-1. Click the **Ribbon icon (bookmark)** to open the Cove view.
-2. Go to **Settings → Cove → Bookmarks folder** to set your root folder.
-3. Click the **+ Add** button (or use `Ctrl+P` → Add bookmark). The modal will automatically pre-fill with the URL from your clipboard, and metadata fetching runs in the background. If the URL is already saved, Cove will prompt you to open the existing bookmark.
-
-**Keyboard Shortcuts:**
-- `j` / `k` / `arrows`: Move focus
-- `e`: Toggle inline editor
-- `x`: Toggle selection (multi-select)
-- `Enter`: Open in browser
-- `/`: Focus search
-- `Esc`: Clear selection
-
----
-
-## Architecture / File Structure
+## Architecture
 
 ```
 cove/
 ├── manifest.json    Plugin metadata
-├── versions.json    minAppVersion compatibility map
+├── versions.json    Plugin version → minimum Obsidian version map
 ├── main.js          Plugin code (single-file CommonJS, no build step)
-├── styles.css       Scoped to .cv-* classes, themes via Obsidian CSS vars
-└── docs/
-    └── assets/      Logo SVGs (dark + light)
+├── styles.css       Scoped to .cv-* classes; themed via Obsidian CSS variables
+└── docs/            Documentation site and logo assets
 ```
 
-**Technical Stack & Design:**
-- **Storage**: Plain `.md` files with YAML frontmatter.
-- **API**: Obsidian Plugin API (`ItemView`, `Modal`, `Setting`, `Menu`, `MarkdownRenderer`).
-- **UI**: Hand-written CommonJS without a framework or bundler.
-- **Drag & Drop**: Native HTML5 APIs.
-- **State**: Cove holds zero state in memory beyond the current render pass. Every list rebuilds securely from Obsidian's `metadataCache`. All file interactions utilize `app.fileManager` to guarantee YAML validity and internal link integrity.
-
----
+- **No build step** — a single hand-written CommonJS `main.js`, with no framework or bundler.
+- **Reads** — bookmark data comes from Obsidian's `metadataCache` (frontmatter only). The parsed list is cached in memory and invalidated on vault and metadata events, so views stay fast without re-reading files. Note bodies are indexed on demand for search using `cachedRead`, keyed by modification time and capped per file.
+- **Writes** — frontmatter changes go through `fileManager.processFrontMatter` (atomic, preserves YAML and links); note-body edits go through `vault.process` (atomic and line-ending-safe), so metadata is never clobbered by a concurrent edit.
+- **Safety** — bookmark, favicon, and cover URLs are scheme-validated on read; the only network activity is Obsidian's `requestUrl` fetching page metadata and checking links for URLs you add. No telemetry, no third-party services.
+- **Theming** — all UI uses namespaced `.cv-*` classes and Obsidian's CSS variables, so it follows your light/dark theme.
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to help improve the project. Be sure to also review our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
-
----
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before opening a pull request.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE).
