@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Cove">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#13191c"/><stop offset="1" stop-color="#182024"/></linearGradient>
+    <clipPath id="tile"><rect x="8" y="8" width="496" height="496" rx="96"/></clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect x="8" y="8" width="496" height="496" fill="url(#sky)"/>
+    <circle cx="344" cy="168" r="92" fill="#dce4df" opacity="0.05"/>
+    <circle cx="344" cy="168" r="58" fill="#dce4df"/>
+    <circle cx="344" cy="168" r="58" fill="#13191c" opacity="0.08"/>
+    <circle cx="120" cy="118" r="3.4" fill="#63736f"/>
+    <circle cx="196" cy="88" r="2.8" fill="#6bdcff"/>
+    <circle cx="256" cy="150" r="3" fill="#63736f"/>
+    <circle cx="150" cy="200" r="2.6" fill="#63736f"/>
+    <circle cx="430" cy="120" r="2.8" fill="#63736f"/>
+    <path d="M8,300 C120,272 260,300 504,282 L504,320 L8,320 Z" fill="#090c0d"/>
+    <path d="M8,308 C90,292 200,312 300,306 L300,324 L8,324 Z" fill="#090c0d"/>
+    <line x1="8" y1="300" x2="504" y2="300" stroke="#39484f" stroke-width="2"/>
+    <path d="M8,300 C130,290 330,314 504,296 L504,504 L8,504 Z" fill="#0e1214"/>
+    <path d="M8,362 C160,350 340,376 504,356 L504,504 L8,504 Z" fill="#090c0d"/>
+    <g stroke="#63f2ab" stroke-linecap="round">
+      <line x1="306" y1="316" x2="382" y2="316" stroke-width="7" opacity="0.9"/>
+      <line x1="312" y1="336" x2="376" y2="336" stroke-width="6.5" opacity="0.72"/>
+      <line x1="316" y1="356" x2="372" y2="356" stroke-width="6" opacity="0.58"/>
+      <line x1="320" y1="376" x2="368" y2="376" stroke-width="5.5" opacity="0.46"/>
+      <line x1="322" y1="396" x2="366" y2="396" stroke-width="5" opacity="0.36"/>
+      <line x1="324" y1="415" x2="364" y2="415" stroke-width="5" opacity="0.28"/>
+    </g>
+    <path d="M60,388 q22,-10 44,0 t44,0" fill="none" stroke="#6bdcff" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+    <line x1="164" y1="352" x2="164" y2="250" stroke="#39484f" stroke-width="5"/>
+    <path d="M164,254 L164,348 L232,348 Z" fill="#b4c3bd"/>
+    <path d="M164,262 L164,340 L120,340 Z" fill="#63f2ab"/>
+    <path d="M112,352 Q164,392 220,352 Z" fill="#202a2f"/>
+    <line x1="164" y1="358" x2="164" y2="374" stroke="#63f2ab" stroke-width="4" opacity="0.5"/>
+  </g>
+  <rect x="8" y="8" width="496" height="496" rx="96" fill="none" stroke="#2a363d" stroke-width="2"/>
+</svg>
