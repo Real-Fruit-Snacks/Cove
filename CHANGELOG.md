@@ -2,6 +2,19 @@
 
 All notable changes to Cove are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] — 2026-07-07
+
+Follow-up hardening from a code review.
+
+### Fixed
+- The search box now keeps focus and cursor position across *every* re-render, not only while typing. A background link check or other vault event can no longer pull focus out of the search field mid-search.
+
+### Security
+- `favicon` and `cover` image URLs read from a bookmark's frontmatter are now restricted to `http(s)` and inline `data:image/` URIs, matching the scheme validation already applied to the bookmark URL. A crafted bookmark file can no longer point them at an arbitrary scheme or host.
+
+### Changed
+- The note-body search index now caps each note at 16 KB, bounding first-search I/O and resident memory on very large vaults.
+
 ## [1.0.4] — 2026-07-07
 
 Search overhaul.
@@ -81,6 +94,7 @@ Initial build.
 - Customizable column visibility and sort field/direction
 - Settings tab with all the above plus per-status / per-tag / per-folder icon overrides
 
+[1.0.5]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.5
 [1.0.4]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.4
 [1.0.3]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.3
 [1.0.2]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.2

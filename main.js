@@ -26,6 +26,11 @@ const {
 
 const VIEW_TYPE = "cove-view";
 
+// Max note-body characters kept in the search index per bookmark. Caps
+// first-search I/O and resident memory on large vaults; searches rarely need
+// more than the opening of a note.
+const NOTE_INDEX_MAX = 16384;
+
 const STATUS_ORDER = ["inbox", "reading", "done", "archive", "broken"];
 
 const ALL_COLUMNS = [
@@ -100,6 +105,15 @@ function slugify(s) {
 function extractDomain(url) {
   try { return new URL(url).hostname.replace(/^www\./, ""); }
   catch { return ""; }
+}
+
+// Frontmatter image URLs (favicon/cover) reach an <img src> / CSS background.
+// Accept only http(s) and inline image data URIs so a crafted bookmark file
+// can't point them at an arbitrary scheme/host.
+function safeAssetUrl(v) {
+  if (!v) return undefined;
+  const s = String(v).trim();
+  return (/^https?:\/\//i.test(s) || /^data:image\//i.test(s)) ? s : undefined;
 }
 
 function parseDateMs(v) {
@@ -1729,6 +1743,16 @@ class CoveView extends ItemView {
   render() {
     if (!this.state.columnsOpen) this.removePopoverHandler();
     const root = this.containerEl.children[1];
+
+    // Preserve search-input focus + caret across the rebuild. rerenderResults()
+    // handles the typing path, but external refreshes (vault events, settings
+    // saves, keyboard nav) go through the full render and would otherwise steal
+    // focus mid-search.
+    const prevSearch = root.querySelector(".cv-search input");
+    const searchWasFocused = !!prevSearch && document.activeElement === prevSearch;
+    const caretStart = searchWasFocused ? prevSearch.selectionStart : null;
+    const caretEnd = searchWasFocused ? prevSearch.selectionEnd : null;
+
     root.empty();
 
     const app = root.createDiv({ cls: "cv-app cv-layout-" + this.state.layout });
@@ -1740,6 +1764,16 @@ class CoveView extends ItemView {
 
     this._bodyEl = main.createDiv({ cls: "cv-body" });
     this.renderLayoutBody(this._bodyEl);
+
+    if (searchWasFocused) {
+      const nextSearch = root.querySelector(".cv-search input");
+      if (nextSearch) {
+        nextSearch.focus();
+        if (caretStart != null) {
+          try { nextSearch.setSelectionRange(caretStart, caretEnd); } catch {}
+        }
+      }
+    }
   }
 
   renderLayoutBody(body) {
@@ -3139,8 +3173,8 @@ class CovePlugin extends Plugin {
             tags: Array.isArray(fm.tags) ? fm.tags.map(String) : [],
             added: parseDateMs(fm.added),
             opened: fm.opened ? parseDateMs(fm.opened) : undefined,
-            favicon: fm.favicon ? String(fm.favicon) : undefined,
-            cover: fm.cover ? String(fm.cover) : undefined,
+            favicon: safeAssetUrl(fm.favicon),
+            cover: safeAssetUrl(fm.cover),
             author: fm.author ? String(fm.author) : undefined,
             icon: fm.icon ? String(fm.icon) : undefined,
             pinned: fm.pinned === true,
@@ -3181,7 +3215,8 @@ class CovePlugin extends Plugin {
         let text = "";
         try {
           const content = await this.app.vault.cachedRead(b.file);
-          text = content.replace(FRONTMATTER_RE, "").toLowerCase();
+          const body = content.replace(FRONTMATTER_RE, "");
+          text = (body.length > NOTE_INDEX_MAX ? body.slice(0, NOTE_INDEX_MAX) : body).toLowerCase();
         } catch (e) {
           console.error("Cove: note index read failed:", path, e);
         }
