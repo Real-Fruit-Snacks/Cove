@@ -1,0 +1,17 @@
+# Normalize line endings. Store LF in the repository and check out LF in the
+# working tree on every platform, so a contributor's core.autocrlf setting can
+# never introduce CRLF and the working tree always matches the LF files shipped
+# in releases.
+* text=auto eol=lf
+
+# Binary types — never normalize (safety net for any assets added later).
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.zip   binary
