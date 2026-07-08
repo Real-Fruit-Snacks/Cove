@@ -69,4 +69,3 @@ Initial build.
 [1.0.3]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.3
 [1.0.2]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.2
 [1.0.0]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.0
-[0.1.0]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/0.1.0
