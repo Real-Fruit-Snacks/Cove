@@ -147,6 +147,58 @@ function colorForTag(tag) {
   return TAG_PALETTE[h % TAG_PALETTE.length];
 }
 
+// Build a nested tag tree from bookmarks. Each tag is split on "/" and an
+// implicit node is created for every prefix path (so "projects/work" yields a
+// "projects" parent even if nothing is tagged "projects" on its own). A node's
+// `count` is the number of DISTINCT bookmarks carrying that path or any
+// descendant of it — a bookmark tagged with both a parent and its child counts
+// once. Siblings are sorted by count desc, then path asc for stability.
+function buildTagTree(bookmarks) {
+  const nodes = new Map(); // full -> { name, full, children:Map, bm:Set }
+  const roots = new Map(); // name -> node (depth-0 nodes)
+
+  const ensure = (full, name) => {
+    let n = nodes.get(full);
+    if (!n) { n = { name, full, children: new Map(), bm: new Set() }; nodes.set(full, n); }
+    return n;
+  };
+
+  bookmarks.forEach((b, i) => {
+    for (const raw of b.tags || []) {
+      const parts = String(raw).split("/").filter(Boolean);
+      let path = "";
+      let parent = null;
+      for (const name of parts) {
+        path = path ? path + "/" + name : name;
+        const node = ensure(path, name);
+        if (parent) parent.children.set(name, node);
+        else roots.set(name, node);
+        node.bm.add(i); // Set dedups a bookmark tagged with both parent and child
+        parent = node;
+      }
+    }
+  });
+
+  const toArr = (map) => {
+    const arr = [...map.values()].map((n) => ({
+      name: n.name,
+      full: n.full,
+      count: n.bm.size,
+      children: toArr(n.children),
+    }));
+    arr.sort((a, b) => b.count - a.count || a.full.localeCompare(b.full));
+    return arr;
+  };
+  return toArr(roots);
+}
+
+// A selected tag matches a bookmark when the bookmark carries that exact tag or
+// any descendant of it. The trailing "/" guard stops "projects" from matching
+// an unrelated "projectsarchive".
+function tagSelected(bookmarkTags, sel) {
+  return bookmarkTags.some((t) => t === sel || t.startsWith(sel + "/"));
+}
+
 function renderHighlighted(el, text, query) {
   el.empty();
   const s = text == null ? "" : String(text);
@@ -1564,6 +1616,7 @@ class CoveView extends ItemView {
       search: "",
       statusFilter: "all",
       tagFilters: new Set(),
+      collapsedTags: new Set(), // full paths whose nested-tag children are hidden (default: expanded)
       folderFilter: null,       // null = all folders, "" = root only, "Tech" = that folder + subfolders
       expandedFolders: new Set(),
       smartFilter: null,        // null | "recent" | "untagged" | "broken" | "pinned"
@@ -1685,7 +1738,9 @@ class CoveView extends ItemView {
 
     let xs = all.filter((b) => {
       if (statusFilter && statusFilter !== "all" && b.status !== statusFilter) return false;
-      for (const t of tagFilters) if (!b.tags.includes(t)) return false;
+      // A selected tag matches the bookmark's exact tag or any descendant, so
+      // picking a parent (e.g. "projects") includes "projects/work" too.
+      for (const t of tagFilters) if (!tagSelected(b.tags, t)) return false;
       if (folderFilter !== null) {
         if (folderFilter === "" && b.folder !== "") return false;
         if (folderFilter !== "" &&
@@ -1798,7 +1853,6 @@ class CoveView extends ItemView {
 
   renderSidebar(side) {
     const counts = this.statusCounts();
-    const tags = this.allTagsByCount();
     const { settings } = this.plugin;
 
     const h1 = side.createEl("h3", { cls: "cv-side-h" });
@@ -1841,24 +1895,49 @@ class CoveView extends ItemView {
 
     this.renderFoldersSection(side);
 
-    if (tags.length > 0) {
+    const tagTree = this.plugin.tagTree();
+    if (tagTree.length > 0) {
       side.createEl("h3", { cls: "cv-side-h", text: "Tags" });
-      for (const { tag, count } of tags) {
-        const active = this.state.tagFilters.has(tag);
-        const link = side.createEl("a", { cls: "cv-side-link" + (active ? " is-active" : "") });
+
+      const renderTagNode = (node, depth) => {
+        const active = this.state.tagFilters.has(node.full);
+        const hasKids = node.children.length > 0;
+        const expanded = !this.state.collapsedTags.has(node.full);
+        const link = side.createEl("a", {
+          cls: "cv-side-link cv-tag-link" + (active ? " is-active" : ""),
+        });
+        link.style.paddingLeft = (8 + depth * 14) + "px";
+
         const lhs = link.createSpan({ cls: "cv-side-lhs" });
-        const icoName = settings.tagIcons[tag];
+        if (hasKids) {
+          const chev = lhs.createSpan({ cls: "cv-folder-chev" });
+          setIcon(chev, expanded ? "chevron-down" : "chevron-right");
+          chev.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (expanded) this.state.collapsedTags.add(node.full);
+            else this.state.collapsedTags.delete(node.full);
+            this.render();
+          });
+        } else {
+          lhs.createSpan({ cls: "cv-folder-spacer" });
+        }
+        const icoName = settings.tagIcons[node.full];
         if (icoName) setIcon(lhs.createSpan({ cls: "cv-tag-ico" }), icoName);
         else lhs.createSpan({ cls: "cv-tag-hash", text: "#" });
-        lhs.createSpan({ text: tag });
-        link.createSpan({ cls: "cv-side-count", text: String(count) });
+        lhs.createSpan({ text: node.name });
+        link.createSpan({ cls: "cv-side-count", text: String(node.count) });
         link.addEventListener("click", (e) => {
           e.preventDefault();
-          if (active) this.state.tagFilters.delete(tag);
-          else this.state.tagFilters.add(tag);
+          if (this.state.tagFilters.has(node.full)) this.state.tagFilters.delete(node.full);
+          else this.state.tagFilters.add(node.full);
           this.render();
         });
-      }
+
+        if (expanded) for (const child of node.children) renderTagNode(child, depth + 1);
+      };
+
+      for (const node of tagTree) renderTagNode(node, 0);
     }
   }
 
@@ -3295,6 +3374,10 @@ class CovePlugin extends Plugin {
     return [...m.entries()]
       .map(([tag, count]) => ({ tag, count }))
       .sort((a, b) => b.count - a.count);
+  }
+
+  tagTree() {
+    return buildTagTree(this.loadBookmarks());
   }
 
   // ---- export

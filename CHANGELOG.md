@@ -2,6 +2,17 @@
 
 All notable changes to Cove are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] — 2026-07-08
+
+Nested tag support.
+
+### Added
+- The **Tags** sidebar is now a collapsible tree that understands Obsidian-style nested tags (`parent/child`). Tags sharing a prefix nest under a common parent — which appears even when nothing is tagged with the bare parent — and every parent has a collapse toggle.
+- Selecting a parent tag filters every bookmark beneath it (the parent itself and all descendants); selecting a leaf still matches exactly, and multiple selected tags continue to narrow results together.
+
+### Changed
+- Sidebar tag counts are now per-branch: a parent shows the number of distinct bookmarks tagged with it or any descendant, counting a bookmark tagged with both a parent and its child only once.
+
 ## [1.0.6] — 2026-07-07
 
 Maintenance release — no functional changes to the plugin (`main.js` and `styles.css` are unchanged from 1.0.5).
@@ -101,6 +112,7 @@ Initial build.
 - Customizable column visibility and sort field/direction
 - Settings tab with all the above plus per-status / per-tag / per-folder icon overrides
 
+[1.0.7]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.7
 [1.0.6]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.6
 [1.0.5]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.5
 [1.0.4]: https://github.com/Real-Fruit-Snacks/Cove/releases/tag/1.0.4
