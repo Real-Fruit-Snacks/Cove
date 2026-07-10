@@ -1,8 +1,8 @@
 <div align="center">
 
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg" />
-    <img alt="Cove" src="docs/assets/logo-light.svg" width="480" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Real-Fruit-Snacks/Cove/main/docs/assets/logo-dark.svg" />
+    <img alt="Cove" src="https://raw.githubusercontent.com/Real-Fruit-Snacks/Cove/main/docs/assets/logo-light.svg" width="480" />
   </picture>
 
   **A bookmark manager for Obsidian where every bookmark is a Markdown file with YAML frontmatter — no proprietary database, no lock-in.**
