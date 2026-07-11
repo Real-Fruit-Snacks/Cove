@@ -1,0 +1,25 @@
+# GitLab CI: lets this repository be mirrored or self-hosted on GitLab with no
+# extra setup. Push to GitLab and the pipeline below runs automatically.
+
+bundle:
+  stage: build
+  image: alpine:latest
+  script:
+    - mkdir -p dist
+    - cp main.js dist/
+    - cp manifest.json dist/
+    - cp styles.css dist/
+  artifacts:
+    paths:
+      - dist
+
+pages:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - cp -r docs public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
