@@ -42,7 +42,7 @@ Adding a URL fetches the page's `og:title`, `og:description`, `og:image`, favico
 - **Pinned bookmarks** — kept at the top regardless of the active sort.
 - **Custom icons** — per bookmark, per tag, per folder, and per status, chosen from a searchable Lucide icon picker.
 - **Bulk actions** — multi-select across any layout to tag, set status, move, archive, or delete in one step.
-- **Link health checks** — run on demand or periodically in the background; unreachable URLs are flagged as Broken.
+- **Link health checks** — run on demand or periodically in the background; unreachable URLs are flagged as Broken, and links that recover return to the status they had before. A run where every check fails (you're offline) is skipped rather than marking your whole collection Broken.
 - **Import & export** — read and write the Netscape Bookmarks HTML format used by Chrome, Firefox, Safari, Pocket, Raindrop, and Pinboard.
 - **Desktop and mobile** — works on both; destructive actions use in-app dialogs and export adapts to the mobile app.
 
