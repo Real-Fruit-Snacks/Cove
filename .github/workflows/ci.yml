@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Syntax-check main.js
+        run: node --check main.js
+
+      - name: Validate manifest.json and versions.json
+        run: |
+          jq -e .id manifest.json > /dev/null
+          jq -e .version manifest.json > /dev/null
+          jq -e .minAppVersion manifest.json > /dev/null
+          version=$(jq -r .version manifest.json)
+          if ! jq -e --arg v "$version" 'has($v)' versions.json > /dev/null; then
+            echo "manifest version $version missing from versions.json" >&2
+            exit 1
+          fi
+
+      - name: Verify plugin loads under a stubbed Obsidian API
+        run: |
+          cat > obsidian-stub.cjs <<'EOF'
+          class Base { constructor() {} }
+          const noop = () => {};
+          module.exports = new Proxy({}, {
+            get: (t, name) => {
+              if (name === "debounce") return (fn) => fn;
+              if (name === "normalizePath") return (p) => p;
+              if (name === "getIconIds") return () => [];
+              if (name === "setIcon" || name === "requestUrl") return noop;
+              return Base;
+            },
+          });
+          EOF
+          cat > load-check.cjs <<'EOF'
+          const Module = require("module");
+          const origResolve = Module._resolveFilename;
+          Module._resolveFilename = function (request, ...rest) {
+            if (request === "obsidian") return require.resolve("./obsidian-stub.cjs");
+            return origResolve.call(this, request, ...rest);
+          };
+          const plugin = require("./main.js");
+          if (typeof plugin !== "function") {
+            console.error("main.js did not export a plugin class");
+            process.exit(1);
+          }
+          console.log("plugin class loads:", plugin.name);
+          EOF
+          node load-check.cjs

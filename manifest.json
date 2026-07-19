@@ -1,7 +1,7 @@
 {
   "id": "cove",
   "name": "Cove",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "minAppVersion": "1.5.0",
   "description": "Bookmark manager with four switchable layouts. Each bookmark is a Markdown file with YAML frontmatter — no proprietary database, no lock-in.",
   "author": "Real-Fruit-Snacks",

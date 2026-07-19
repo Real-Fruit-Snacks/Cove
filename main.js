@@ -3423,23 +3423,47 @@ class CovePlugin extends Plugin {
     const items = this.loadBookmarks();
     let broken = 0;
     const queue = [...items];
-    // Run a few checks in parallel, and only rewrite files whose status
-    // actually changes — an unchanged vault stays byte-identical (no
-    // mtime/sync churn, no re-render cascade per bookmark).
+    const results = [];
+    // Run a few checks in parallel, collecting results before writing
+    // anything. Only files whose status actually changes are rewritten — an
+    // unchanged vault stays byte-identical (no mtime/sync churn, no re-render
+    // cascade per bookmark).
     const worker = async () => {
       for (let b = queue.shift(); b; b = queue.shift()) {
         const ok = await checkLinkAlive(b.url);
         if (!ok) broken++;
-        const newStatus = !ok ? "broken" : b.status === "broken" ? "inbox" : null;
-        if (newStatus && newStatus !== b.status) {
-          await this.updateFrontmatter(b.file, (fm) => {
-            fm.lastChecked = new Date().toISOString();
-            fm.status = newStatus;
-          });
-        }
+        results.push({ b, ok });
       }
     };
     await Promise.all(Array.from({ length: Math.min(4, queue.length) }, worker));
+
+    // Every single check failing means the machine is almost certainly
+    // offline, not that the whole collection died at once. Writing in that
+    // state would stamp "broken" over every curated status — skip instead
+    // and leave lastLinkCheck alone so the check re-runs when back online.
+    if (items.length > 0 && broken === items.length) {
+      if (verbose) new Notice("Cove: all link checks failed — network looks offline, statuses left untouched.");
+      console.warn("Cove link check: all checks failed; assuming offline and skipping writes.");
+      return { total: items.length, broken };
+    }
+
+    for (const { b, ok } of results) {
+      if (!ok && b.status !== "broken") {
+        // Remember what the status was so a recovered link can return to it.
+        await this.updateFrontmatter(b.file, (fm) => {
+          fm.lastChecked = new Date().toISOString();
+          fm.statusBeforeBroken = STATUS_ORDER.includes(fm.status) ? fm.status : "inbox";
+          fm.status = "broken";
+        });
+      } else if (ok && b.status === "broken") {
+        await this.updateFrontmatter(b.file, (fm) => {
+          fm.lastChecked = new Date().toISOString();
+          const prev = fm.statusBeforeBroken;
+          fm.status = STATUS_ORDER.includes(prev) && prev !== "broken" ? prev : "inbox";
+          delete fm.statusBeforeBroken;
+        });
+      }
+    }
     this.settings.lastLinkCheck = Date.now();
     await this.saveData(this.settings);
     if (verbose) console.log(`Cove link check: ${items.length} total, ${broken} broken`);

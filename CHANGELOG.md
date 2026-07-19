@@ -2,6 +2,17 @@
 
 All notable changes to Cove are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] — 2026-07-19
+
+Link-health data-integrity fixes.
+
+### Fixed
+- A link-health check that runs while the machine is offline no longer marks every bookmark as broken. When every single check fails, Cove now assumes the network is down, leaves all statuses untouched, and retries on the next opportunity instead of stamping "broken" across the collection.
+- A bookmark whose link recovers now returns to the status it had before it went broken (reading, done, archive, and so on) instead of always being reset to inbox. The prior status is remembered in the bookmark's frontmatter while the link is down.
+
+### Added
+- Continuous integration on every push: syntax-checks `main.js`, validates `manifest.json` against `versions.json`, and verifies the plugin class loads under a stubbed Obsidian API. The repository previously only ran checks at release time.
+
 ## [1.0.7] — 2026-07-08
 
 Nested tag support.
